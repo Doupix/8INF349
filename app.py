@@ -46,7 +46,7 @@ def editOrder(id):
 	try :
 		db.editOrder(id, data)
 		return redirect("/order/"+data["product"]["id"])
-	except MissingFieldsError | AlreadyPaidError | MissingFieldsError as ex:
+	except MissingFieldsError | AlreadyPaidError | CardDeclinedError as ex:
 		abort(Response(str(ex), 422))
 	except NoFoundError:
 		abort(404)
