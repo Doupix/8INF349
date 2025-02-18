@@ -1,6 +1,6 @@
 from flask import Flask, abort, redirect, request, Response
 import json
-from src.Database import *
+from src.Database import DB
 from src.Errors import *
 
 app = Flask(__name__)
@@ -12,7 +12,10 @@ jsonObj = json.loads(jsonVariable)
 print(jsonObj["element"]["subElement1"])
 '''
 
-db = FakeDB()
+try:
+	db = DB("stock.sql",{})
+except :
+	exit()
 
 @app.get('/')
 def listProducts():
@@ -24,8 +27,8 @@ def newOrder():
 	# Crée une commande
 	order = json.loads(request.data)
 	try :
-		db.registryOrder(order)
-		return redirect("/order/"+order["product"]["id"])
+		id = db.registeryOrder(order)
+		return redirect("/order/"+str(id))
 	except MissingFieldsError | OutOfInventoryError as ex:
 		abort(Response(str(ex), 422))
 

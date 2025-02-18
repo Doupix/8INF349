@@ -1,0 +1,22 @@
+{
+	"products": [
+		{
+			"id": 1,
+			"name": "Fruits bouquet",
+			"description": "Abstract citrus fruits bouquet on blue background",
+			"image": "48.jpg",
+			"weight": 401,
+			"price": 18.18,
+			"in_stock": true
+		},
+		{
+			"id": 2,
+			"name": "Peaches on branch",
+			"description": "Peaches on branch with leaves and glasses with peach juice and limonade with ice cubes in aluminum tray over old metal table. dark rustic style. top view.",
+			"image": "49.jpg",
+			"weight": 400,
+			"price": 25.62,
+			"in_stock": false
+		}
+	]
+}
