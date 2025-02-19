@@ -9,7 +9,7 @@ class BaseModel(Model):
     class Meta:
         database = db
 
-# Modele porduits
+# Modele produits
 class Product(BaseModel):
 	id = IntegerField(primary_key=True)
 	name = CharField()
@@ -19,7 +19,7 @@ class Product(BaseModel):
 	in_stock = BooleanField()
 	image = CharField()
 
-# Modele comandes
+# Modele commandes
 class Order(BaseModel):
 	id = AutoField()
 	product = ForeignKeyField(Product, backref='orders')
@@ -41,7 +41,7 @@ class DB:
 			Product.get_or_create(
 				id=p["id"],
 				name=p["name"],
-			   description=p["description"],
+				description=p["description"],
 				price=p["price"],
 				weight=p["weight"],
 				in_stock=p["in_stock"],
@@ -93,7 +93,7 @@ class DB:
 		return order_data
 
 	# Modifier commande (ajout mail adresse)
-	def editOrder(self, id : int, data : dict[str, dict]) -> None:
+	def editOrder(self, id : int, data : dict) -> None:
 		order = Order.get_or_none(Order.id == id)
 		if not order:
 			raise NoFoundError()

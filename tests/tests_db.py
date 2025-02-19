@@ -25,12 +25,52 @@ def test_registeryOrder():
 def test_queryOrder():
 	products, storage = initDB("./tests/json/products_light.json")
 	orderId = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
-	expectedOdrer = {'id': 1, 'product': 1, 'quantity': 2, 'total_price': 36.36, 'total_price_tax': None, 'shipping_price': 10.0, 'email': None, 'shipping_information': None, 'paid': False}
+	expectedResponse = (
+		{
+			'id': 1,
+			'product': 1,
+			'quantity': 2,
+			'total_price': 36.36,
+			'total_price_tax': None,
+			'shipping_price': 10.0,
+			'email': None,
+			'shipping_information': None,
+			'paid': False
+		},
+		{
+			'id': 1,
+			'product': 1,
+			'quantity': 2,
+			'total_price': 36.36,
+			'total_price_tax': None,
+			'shipping_price': 10.0,
+			'email': 'jgnault@uqac.ca',
+			'shipping_information': {
+				'country': 'Canada',
+				'address': '201, rue Président-Kennedy',
+				'postal_code': 'G7X 3Y7',
+				'city': 'Chicoutimi',
+				'province': 'QC'},
+			'paid': False
+		}
+	)
+
 	with pytest.raises(NoFoundError):
 		storage.queryOrder(orderId+1)
-	assert(storage.queryOrder(orderId) == expectedOdrer)
 
-def test_editOrder():
+	assert(storage.queryOrder(orderId) == expectedResponse[0])
+	storage.editOrder(orderId, { "order" : {
+		"email" : "jgnault@uqac.ca",
+		"shipping_information" : {
+			"country" : "Canada",
+			"address" : "201, rue Président-Kennedy",
+			"postal_code" : "G7X 3Y7",
+			"city" : "Chicoutimi",
+			"province" : "QC"}}})
+	assert(storage.queryOrder(orderId) == expectedResponse[1])
+
+
+def test_editOrderError():
 	products, storage = initDB("./tests/json/products_light.json")
 	orders = [
 		storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }}),
