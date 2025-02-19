@@ -45,10 +45,10 @@ def getOrder(id):
 @app.put('/orders/<int:id>')
 def editOrder(id):
 	# Edite une commande (carte de crédit, coordonnées client, etc...)
-	data = json.loads(request.data)
+	data : dict = json.loads(request.data)
 	try :
-		db.editOrder(id, data)
-		return redirect("/order/"+data["product"]["id"])
+		orderId = db.editOrder(id, data)
+		return redirect("/order/"+id)
 	except MissingFieldsError | AlreadyPaidError | CardDeclinedError as ex:
 		abort(Response(str(ex), 422))
 	except NoFoundError:

@@ -93,30 +93,22 @@ class DB:
 		return order_data
 
 	# Modifier commande (ajout mail adresse)
-	def editOrder(self, id, data) -> None:
+	def editOrder(self, id : int, data : dict[str, dict]) -> None:
 		order = Order.get_or_none(Order.id == id)
 		if not order:
 			raise NoFoundError()
 
-		# Liste des champs interdits à la modification
-		forbidden_fields = ["total_price", "total_price_tax", "transaction", "paid", "product", "shipping_price", "id"]
-
-		# Verifier si l'utilisateur essaie de modifier un champs interdit
-		for field in data:
-			if field in forbidden_fields:
-				raise MissingFieldsError(f"Le champ {field} ne peut pas etre modifié")
-
 		# Verifier la présence des champs obligatoires
 		required_fields = ["email", "shipping_information"]
-		if not all(field in data for field in required_fields):
+		if not all(field in data["order"] for field in required_fields):
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 
 		# Vérifier que 'shipping_information' contient bien les sous champs obligatoires
 		shipping_required_fields = ["country", "address", "postal_code", "city", "province"]
-		if not all(field in data["shipping_information"] for field in shipping_required_fields):
+		if not all(field in data["order"]["shipping_information"] for field in shipping_required_fields):
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 
 		# Mettre à jour uniquement mail et shipping_information
-		order.email = data["email"]
-		order.shipping_information = json.dumps(data["shipping_information"])
+		order.email = data["order"]["email"]
+		order.shipping_information = json.dumps(data["order"]["shipping_information"])
 		order.save()
