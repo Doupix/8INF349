@@ -1,5 +1,6 @@
 from flask import Flask, abort, redirect, request, Response
 import json
+import urllib.request
 from src.Database import DB
 from src.Errors import *
 
@@ -13,7 +14,8 @@ print(jsonObj["element"]["subElement1"])
 '''
 
 try:
-	db = DB("stock.sql",{})
+	products = json.loads(urllib.request.urlopen("http://dimensweb.uqac.ca/~jgnault/shops/products/").read())
+	db = DB("stock.sql", products)
 except :
 	exit()
 
@@ -47,9 +49,15 @@ def editOrder(id):
 	# Edite une commande (carte de crédit, coordonnées client, etc...)
 	data : dict = json.loads(request.data)
 	try :
-		orderId = db.editOrder(id, data)
-		return redirect("/order/"+id)
+		if data.get("order"):
+			db.editCustomer(id, data)
+		elif data.get("credit_card"):
+			db.editCard(id, data)
+		else:
+			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 	except MissingFieldsError | AlreadyPaidError | CardDeclinedError as ex:
 		abort(Response(str(ex), 422))
 	except NoFoundError:
 		abort(404)
+	else :
+		return redirect("/order/"+id)

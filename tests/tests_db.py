@@ -59,7 +59,7 @@ def test_queryOrder():
 		storage.queryOrder(orderId+1)
 
 	assert(storage.queryOrder(orderId) == expectedResponse[0])
-	storage.editOrder(orderId, { "order" : {
+	storage.editCustomer(orderId, { "order" : {
 		"email" : "jgnault@uqac.ca",
 		"shipping_information" : {
 			"country" : "Canada",
@@ -78,7 +78,7 @@ def test_editOrderError():
 		storage.registeryOrder({ "product": { "id": 1, "quantity": 4 }})
 	]
 
-	storage.editOrder(orders[0], { "order" : {
+	storage.editCustomer(orders[0], { "order" : {
 		"email" : "jgnault@uqac.ca",
 		"shipping_information" : {
 			"country" : "Canada",
@@ -88,7 +88,7 @@ def test_editOrderError():
 			"province" : "QC"}}})
 
 	with pytest.raises(NoFoundError):
-		storage.editOrder(42, {"order" : {
+		storage.editCustomer(42, {"order" : {
 			"email" : "jgnault@uqac.ca",
 			"shipping_information" : {
 				"country" : "Canada",
@@ -98,7 +98,7 @@ def test_editOrderError():
 				"province" : "QC"}}})
 
 	with pytest.raises(MissingFieldsError):
-		storage.editOrder(orders[1], { "order" : {
+		storage.editCustomer(orders[1], { "order" : {
 			"shipping_information" : {
 				"country" : "Canada",
 				"address" : "201, rue Président-Kennedy",
@@ -107,7 +107,7 @@ def test_editOrderError():
 				"province" : "QC"}}})
 
 	with pytest.raises(MissingFieldsError):
-		storage.editOrder(orders[2], {
+		storage.editCustomer(orders[2], {
 			"order" : {
 				"email" : "jgnault@uqac.ca",
 				"shipping_information" : {
@@ -117,7 +117,7 @@ def test_editOrderError():
 					"province" : "QC"}}}
 		)
 	with pytest.raises(MissingFieldsError):
-		storage.editOrder(orders[2], {
+		storage.editCustomer(orders[2], {
 			"order" : {
 				"email" : "jgnault@uqac.ca",}}
 		)

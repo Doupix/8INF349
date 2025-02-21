@@ -1,6 +1,8 @@
 import json
 from peewee import *
-from src.Errors import MissingFieldsError, NoFoundError, OutOfInventoryError
+from playhouse.shortcuts import model_to_dict
+from src.Errors import AlreadyPaidError, CardDeclinedError, MissingFieldsError, NoFoundError, OutOfInventoryError
+import urllib.request
 
 # Connexion database
 db = SqliteDatabase(None)
@@ -11,7 +13,7 @@ class BaseModel(Model):
 
 # Modele produits
 class Product(BaseModel):
-	id = IntegerField(primary_key=True)
+	id = AutoField()
 	name = CharField()
 	description = TextField()
 	price = FloatField()
@@ -19,24 +21,37 @@ class Product(BaseModel):
 	in_stock = BooleanField()
 	image = CharField()
 
-# Modele commandes
+class Customer(BaseModel):
+	id = AutoField()
+	email = CharField()
+	country = CharField()
+	address = CharField()
+	postal_code = CharField()
+	city = CharField()
+	province = CharField()
+
+class Payment(BaseModel):
+	transactionID = CharField(primary_key = True)
+	amount_charged = IntegerField()
+	card_name = CharField()
+	firstDigits = CharField()
+	lastDigits = CharField()
+	expirationYear = IntegerField()
+	expirationMonth = IntegerField()
+
 class Order(BaseModel):
 	id = AutoField()
-	product = ForeignKeyField(Product, backref='orders')
+	product = ForeignKeyField(Product, backref='orders', null = True)
+	customer = ForeignKeyField(Customer, backref='orders', null = True)
+	payment = ForeignKeyField(Payment, backref='orders', null = True)
 	quantity = IntegerField()
-	total_price = FloatField()
-	total_price_tax = FloatField(null=True)
-	shipping_price = FloatField(null=True)
-	email = CharField(null = True)
-	shipping_information = TextField(null = True)
-	paid = BooleanField(default=False)
 
 # Classe gestion BDD
 class DB:
 	def __init__(self, path : str, products : dict):
 		db.init(path)
 		db.connect()
-		db.create_tables([Product, Order], safe=True)
+		db.create_tables([Product, Customer, Payment, Order], safe=True)
 		for p in products.get("products", []):
 			Product.get_or_create(
 				id=p["id"],
@@ -50,7 +65,7 @@ class DB:
 
 	# Retourner liste produits
 	def queryProducts(self) -> dict:
-		return {"products": [product.__data__ for product in Product.select()]}
+		return {"products": [model_to_dict(product) for product in Product.select()]}
 
 	# Creer une commande
 	def registeryOrder(self, order) -> int:
@@ -66,49 +81,176 @@ class DB:
 			if not product.in_stock or not product:
 				raise OutOfInventoryError()
 
-			total_price = product.price * quantity
-			shipping_price = 5 if product.weight * quantity <= 500 else \
-							 10 if product.weight * quantity < 2000 else 25
-
 			new_order = Order.create(
 				product=product,
-				quantity=quantity,
-				total_price=total_price,
-				shipping_price=shipping_price,
-				email=None,
-				shipping_information=None
+				quantity=quantity
 			)
 			return new_order.id
+
 		except KeyError:
 			raise MissingFieldsError("La création d'une commande nécessite un produit")
 
 	# Recupérer une commande
+	# TODO
 	def queryOrder(self, id) -> dict:
-		order = Order.get_or_none(Order.id == id)
-		if not order:
+		try :
+			order : Order = Order.get(Order.id == id)
+		except DoesNotExist:
+			raise NoFoundError()
+		product : Product = Product.get(order.product == Product.id)
+		price = self.calculPrice(id)
+		data = {
+			"order" : {
+				"total_price" : price["total_price"],
+				"product" : {
+					"id" : order.product,
+					"quantity" : order.quantity
+				},
+				"shipping_price" : price["shipping_price"],
+				"id" : order.id
+			}
+		}
+
+		customer : Customer = Customer.get_or_none(order.customer == Customer.id)
+		if customer:
+			data["order"].update(
+				{
+					"shipping_information" : {
+						"country" : customer.country,
+						"address" : customer.address,
+						"postal_code" : customer.postal_code,
+						"city" : customer.city,
+						"province" : customer.province
+					},
+					"email" : customer.email,
+					"total_price_tax" : price["total_price_tax"],
+				}
+			)
+
+		payment : Payment = Payment.get_or_none(order.payment == Payment.transactionID)
+		if payment:
+			data["order"].update(
+				{
+					"credit_card" : {
+						"name" : payment.card_name,
+						"first_digits" :payment.firstDigits,
+						"last_digits": payment.lastDigits,
+						"expiration_year" : payment.expirationYear,
+						"expiration_month" : payment.expirationMonth
+					},
+					"transaction": {
+						"id": payment.transactionID,
+						"success": True,
+						"amount_charged": payment.amount_charged
+					},
+					"paid": True,
+				}
+			)
+		else :
+			data["order"].update({"paid": False})
+
+		return {} # A faire !!!
+
+	def editCustomer(self, id : int, data : dict) -> None:
+		order = data["order"]
+		try :
+			orderInfo = Order.get(Order.id == id)
+		except DoesNotExist:
 			raise NoFoundError()
 
-		order_data = order.__data__
-		order_data["shipping_information"] = json.loads(order_data["shipping_information"]) if order_data["shipping_information"] else None
-		return order_data
-
-	# Modifier commande (ajout mail adresse)
-	def editOrder(self, id : int, data : dict) -> None:
-		order = Order.get_or_none(Order.id == id)
-		if not order:
-			raise NoFoundError()
-
-		# Verifier la présence des champs obligatoires
-		required_fields = ["email", "shipping_information"]
-		if not all(field in data["order"] for field in required_fields):
+		if not all(field in order for field in ["email", "shipping_information"]):
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 
-		# Vérifier que 'shipping_information' contient bien les sous champs obligatoires
-		shipping_required_fields = ["country", "address", "postal_code", "city", "province"]
-		if not all(field in data["order"]["shipping_information"] for field in shipping_required_fields):
+		if not all(field in order["shipping_information"] for field in ["country", "address", "postal_code", "city", "province"]):
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
+		shippingInfo = order["shipping_information"]
+		Customer(
+			email = order["email"],
+			country = shippingInfo["country"],
+			address = shippingInfo["address"],
+			postal_code = shippingInfo["postal_code"],
+			city = shippingInfo["city"],
+			province = shippingInfo["province"]
+		).save()
 
-		# Mettre à jour uniquement mail et shipping_information
+
+
+	def calculPrice(self, id : int) -> dict :
+
+
+		order = Order.get(Order.id == id)
+		product = Product.get(order.product == Product.id)
+
+
+		total_price = product.price * order.quantity
+		shipping_price = 5 if product.weight * order.quantity <= 500 else \
+						 10 if product.weight * order.quantity < 2000 else 25
+		price = {"total_price" : total_price , "shipping_price": shipping_price}
+		customer = Customer.get_or_none(order.customer == Customer.id)
+		if customer:
+			match customer.province :
+				case "QC":
+					total_price_tax = 1.15 * total_price
+				case "ON":
+					total_price_tax = 1.13 * total_price
+				case "AB":
+					total_price_tax = 1.05 * total_price
+				case "BC":
+					total_price_tax = 1.12 * total_price
+				case "NS":
+					total_price_tax = 1.14 * total_price
+				case _:
+					total_price_tax = 1.15 * total_price
+			price.update({"total_price_tax" : total_price_tax, "amount_charged":total_price+shipping_price})
+		else :
+			price.update({"total_price_tax" : 1.15 * total_price, "amount_charged": 1.15*total_price+shipping_price})
+		return price
+
+
+
+
+
+
+	def pay(self, id : int, data : dict) -> dict:
+		request : dict = {"amount_charged" : self.calculPrice(id)["amount_charged"]}
+		request.update(data)
+		response = urllib.request.urlopen("http://dimensweb.uqac.ca/~jgnault/shops/pay/", request).read()
+		return json.loads(response)
+
+	def editCard(self, id : int, data : dict) -> None:
+		creditCard = data["credit_card"]
+		if not all(field in creditCard for field in ["name", "number", "expiration_year", "cvv", "expiration_month"]):
+			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
+		if Order.get(Order.payment != None):
+			raise AlreadyPaidError
+		if Order.get(Order.customer == None):
+			raise MissingFieldsError("Les informations du client sont nécessaire avant d'appliquer une carte de crédit")
+
+		response = self.pay(id, data)
+		if response.get("errors"):
+			raise CardDeclinedError()
+		else :
+			card = response["credit_card"]
+			transaction = response["transaction"]
+			Payment(
+				transactionID = transaction["id"],
+				amount_charged = transaction["amount_charged"],
+				card_name = card["name"],
+				firstDigits = card["first_digits"],
+				lastDigits = card["last_digits"],
+				expirationYear = card["expiration_year"],
+				expirationMonth = card["expiration_month"]
+			).save()
+
+
+
+
+
+
+
+
+		'''
 		order.email = data["order"]["email"]
 		order.shipping_information = json.dumps(data["order"]["shipping_information"])
 		order.save()
+		'''
