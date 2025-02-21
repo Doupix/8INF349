@@ -25,40 +25,53 @@ def test_registeryOrder():
 def test_queryOrder():
 	products, storage = initDB("./tests/json/products_light.json")
 	orderId = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
-	expectedResponse = (
-		{
-			'id': 1,
-			'product': 1,
-			'quantity': 2,
-			'total_price': 36.36,
-			'total_price_tax': None,
-			'shipping_price': 10.0,
-			'email': None,
-			'shipping_information': None,
-			'paid': False
-		},
-		{
-			'id': 1,
-			'product': 1,
-			'quantity': 2,
-			'total_price': 36.36,
-			'total_price_tax': None,
-			'shipping_price': 10.0,
-			'email': 'jgnault@uqac.ca',
-			'shipping_information': {
-				'country': 'Canada',
-				'address': '201, rue Président-Kennedy',
-				'postal_code': 'G7X 3Y7',
-				'city': 'Chicoutimi',
-				'province': 'QC'},
-			'paid': False
+	expectedResponse = {
+			"order" : {
+				"id" : 1,
+				"total_price" : 18.18*2,
+				"total_price_tax" : None,
+				"email" : None,
+				"credit_card": {},
+				"shipping_information" : {},
+				"paid": False,
+				"transaction": {},
+				"product" : {
+					"id" : 1,
+					"quantity" : 2
+				},
+				"shipping_price" : 10
+			}
 		}
-	)
+	expectedResponseCustomer=  {
+			"order" : {
+				"credit_card": {},
+				"email" : "jgnault@uqac.ca",
+				"shipping_information" : {
+					"country" : "Canada",
+					"address" : "201, rue Président-Kennedy",
+					"postal_code" : "G7X 3Y7",
+					"city" : "Chicoutimi",
+					"province" : "QC"
+				},
+				"paid": False,
+				"transaction": {},
+				"product" : {
+					"id" : 1,
+					"quantity" : 2
+				},
+				"shipping_price" : 10,
+				"total_price_tax" : (18.18*2)*1.15,
+				"id" : 1,
+				"total_price" : 18.18*2,
+			}
+		}
+
+
 
 	with pytest.raises(NoFoundError):
 		storage.queryOrder(orderId+1)
 
-	assert(storage.queryOrder(orderId) == expectedResponse[0])
+	assert(storage.queryOrder(orderId) == expectedResponse)
 	storage.editCustomer(orderId, { "order" : {
 		"email" : "jgnault@uqac.ca",
 		"shipping_information" : {
@@ -67,7 +80,7 @@ def test_queryOrder():
 			"postal_code" : "G7X 3Y7",
 			"city" : "Chicoutimi",
 			"province" : "QC"}}})
-	assert(storage.queryOrder(orderId) == expectedResponse[1])
+	assert(storage.queryOrder(orderId) == expectedResponseCustomer)
 
 
 def test_editOrderError():

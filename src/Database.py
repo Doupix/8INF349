@@ -41,9 +41,9 @@ class Payment(BaseModel):
 
 class Order(BaseModel):
 	id = AutoField()
-	product = ForeignKeyField(Product, backref='orders', null = True)
-	customer = ForeignKeyField(Customer, backref='orders', null = True)
-	payment = ForeignKeyField(Payment, backref='orders', null = True)
+	product = IntegerField(null = True)
+	customer = IntegerField(null = True)
+	payment = CharField(null = True)
 	quantity = IntegerField()
 
 # Classe gestion BDD
@@ -92,22 +92,28 @@ class DB:
 
 	# Recupérer une commande
 	# TODO
-	def queryOrder(self, id) -> dict:
+	def queryOrder(self, id : int) -> dict:
 		try :
 			order : Order = Order.get(Order.id == id)
 		except DoesNotExist:
 			raise NoFoundError()
-		product : Product = Product.get(order.product == Product.id)
+		product = Product.get(order.product == Product.id)
 		price = self.calculPrice(id)
 		data = {
 			"order" : {
+				"id" : order.id,
 				"total_price" : price["total_price"],
+				"total_price_tax" : None,
+				"email" : None,
+				"credit_card":{},
+				"shipping_information" : {},
+				"paid": False,
+				"transaction": {},
 				"product" : {
 					"id" : order.product,
 					"quantity" : order.quantity
 				},
 				"shipping_price" : price["shipping_price"],
-				"id" : order.id
 			}
 		}
 
@@ -146,42 +152,41 @@ class DB:
 					"paid": True,
 				}
 			)
-		else :
-			data["order"].update({"paid": False})
 
-		return {} # A faire !!!
+		return data # A faire !!!
 
 	def editCustomer(self, id : int, data : dict) -> None:
 		order = data["order"]
 		try :
-			orderInfo = Order.get(Order.id == id)
+			orderInfo : Order = Order.get(Order.id == id)
+			if not all(field in order for field in ["email", "shipping_information"]):
+					raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
+
+			if not all(field in order["shipping_information"] for field in ["country", "address", "postal_code", "city", "province"]):
+				raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
+			shippingInfo = order["shipping_information"]
+			customer = Customer(
+				email = order["email"],
+				country = shippingInfo["country"],
+				address = shippingInfo["address"],
+				postal_code = shippingInfo["postal_code"],
+				city = shippingInfo["city"],
+				province = shippingInfo["province"]
+			)
+			customer.save()
+			orderInfo.customer = customer.id
+			orderInfo.save()
+
 		except DoesNotExist:
 			raise NoFoundError()
 
-		if not all(field in order for field in ["email", "shipping_information"]):
-			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 
-		if not all(field in order["shipping_information"] for field in ["country", "address", "postal_code", "city", "province"]):
-			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
-		shippingInfo = order["shipping_information"]
-		Customer(
-			email = order["email"],
-			country = shippingInfo["country"],
-			address = shippingInfo["address"],
-			postal_code = shippingInfo["postal_code"],
-			city = shippingInfo["city"],
-			province = shippingInfo["province"]
-		).save()
 
 
 
 	def calculPrice(self, id : int) -> dict :
-
-
 		order = Order.get(Order.id == id)
 		product = Product.get(order.product == Product.id)
-
-
 		total_price = product.price * order.quantity
 		shipping_price = 5 if product.weight * order.quantity <= 500 else \
 						 10 if product.weight * order.quantity < 2000 else 25
@@ -202,8 +207,6 @@ class DB:
 				case _:
 					total_price_tax = 1.15 * total_price
 			price.update({"total_price_tax" : total_price_tax, "amount_charged":total_price+shipping_price})
-		else :
-			price.update({"total_price_tax" : 1.15 * total_price, "amount_charged": 1.15*total_price+shipping_price})
 		return price
 
 
@@ -221,9 +224,11 @@ class DB:
 		creditCard = data["credit_card"]
 		if not all(field in creditCard for field in ["name", "number", "expiration_year", "cvv", "expiration_month"]):
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
-		if Order.get(Order.payment != None):
+
+		orderInfo : Order = Order.get(Order.id == id)
+		if orderInfo.payment != None:
 			raise AlreadyPaidError
-		if Order.get(Order.customer == None):
+		if orderInfo.customer == None:
 			raise MissingFieldsError("Les informations du client sont nécessaire avant d'appliquer une carte de crédit")
 
 		response = self.pay(id, data)
@@ -232,7 +237,7 @@ class DB:
 		else :
 			card = response["credit_card"]
 			transaction = response["transaction"]
-			Payment(
+			payment = Payment(
 				transactionID = transaction["id"],
 				amount_charged = transaction["amount_charged"],
 				card_name = card["name"],
@@ -240,7 +245,10 @@ class DB:
 				lastDigits = card["last_digits"],
 				expirationYear = card["expiration_year"],
 				expirationMonth = card["expiration_month"]
-			).save()
+			)
+			payment.save()
+			orderInfo.payment = payment.transactionID
+			orderInfo.save()
 
 
 
