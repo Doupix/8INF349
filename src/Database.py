@@ -194,17 +194,17 @@ class DB:
 		if customer:
 			match customer.province :
 				case "QC":
-					total_price_tax = 1.15 * total_price
+					total_price_tax = round(1.15 * total_price, 2)
 				case "ON":
-					total_price_tax = 1.13 * total_price
+					total_price_tax = round(1.13 * total_price, 2)
 				case "AB":
-					total_price_tax = 1.05 * total_price
+					total_price_tax = round(1.05 * total_price, 2)
 				case "BC":
-					total_price_tax = 1.12 * total_price
+					total_price_tax = round(1.12 * total_price, 2)
 				case "NS":
-					total_price_tax = 1.14 * total_price
+					total_price_tax = round(1.14 * total_price, 2)
 				case _:
-					total_price_tax = 1.15 * total_price
+					total_price_tax = round(1.15 * total_price, 2)
 			price.update({"total_price_tax" : total_price_tax, "amount_charged":total_price+shipping_price})
 		return price
 

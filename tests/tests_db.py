@@ -29,7 +29,7 @@ def test_queryOrder():
 	expectedResponse = {
 			"order" : {
 				"id" : 1,
-				"total_price" : 18.18*2,
+				"total_price" : 36.36,
 				"total_price_tax" : None,
 				"email" : None,
 				"credit_card": {},
@@ -61,13 +61,11 @@ def test_queryOrder():
 					"quantity" : 2
 				},
 				"shipping_price" : 10,
-				"total_price_tax" : (18.18*2)*1.15,
+				"total_price_tax" : 41.81,
 				"id" : 1,
-				"total_price" : 18.18*2,
+				"total_price" : 36.36,
 			}
 		}
-
-
 
 	with pytest.raises(NoFoundError):
 		storage.queryOrder(orderId+1)
@@ -94,6 +92,7 @@ def test_editCard():
 			"postal_code" : "G7X 3Y7",
 			"city" : "Chicoutimi",
 			"province" : "QC"}}})
+
 	with pytest.raises(CardDeclinedError):
 		storage.editCard(orderID, {
 			"credit_card" : {
@@ -103,6 +102,7 @@ def test_editCard():
 				"cvv" : "123",
 				"expiration_month" : 9
 			}})
+
 	storage.editCard(orderID, {
 		"credit_card" : {
 			"name" : "John Doe",
@@ -111,6 +111,7 @@ def test_editCard():
 			"cvv" : "123",
 			"expiration_month" : 9
 		}})
+
 	with pytest.raises(AlreadyPaidError):
 		storage.editCard(orderID, {
 			"credit_card" : {
@@ -120,6 +121,7 @@ def test_editCard():
 				"cvv" : "123",
 				"expiration_month" : 9
 			}})
+
 	order = storage.queryOrder(orderID)["order"]
 	assert(order["paid"]==True)
 	assert(order["transaction"]!=None)
