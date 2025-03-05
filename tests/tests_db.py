@@ -2,6 +2,7 @@ from itertools import product
 from _pytest.mark.structures import store_mark
 import pytest, json
 from src.Database import *
+import copy
 
 def initDB(path : str) -> tuple[dict, DB]:
 	products : dict = json.load(open(path))
@@ -83,44 +84,36 @@ def test_queryOrder():
 
 def test_editCard():
 	products, storage = initDB("./tests/json/products_light.json")
-	orderID = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
-	storage.editCustomer(orderID, { "order" : {
-		"email" : "jgnault@uqac.ca",
-		"shipping_information" : {
+	customer =  {
+		"order" : {
+			"email" : "jgnault@uqac.ca",
+			"shipping_information" : {
 			"country" : "Canada",
 			"address" : "201, rue Président-Kennedy",
 			"postal_code" : "G7X 3Y7",
 			"city" : "Chicoutimi",
-			"province" : "QC"}}})
-
-	with pytest.raises(CardDeclinedError):
-		storage.editCard(orderID, {
-			"credit_card" : {
-				"name" : "John Doe",
-				"number" : "4242 4242 4242 4242",
-				"expiration_year" : 2022,
-				"cvv" : "123",
-				"expiration_month" : 9
-			}})
-
-	storage.editCard(orderID, {
+			"province" : "QC"}}
+		}
+	card = {
 		"credit_card" : {
 			"name" : "John Doe",
 			"number" : "4242 4242 4242 4242",
-			"expiration_year" : 2025,
+			"expiration_year" : 2022,
 			"cvv" : "123",
-			"expiration_month" : 9
-		}})
+			"expiration_month" : 9}
+		}
+
+	orderID = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
+	storage.editCustomer(orderID, customer)
+
+	with pytest.raises(CardDeclinedError):
+		storage.editCard(orderID, card)
+
+	card["credit_card"]["expiration_year"] = 2025
+	storage.editCard(orderID, card)
 
 	with pytest.raises(AlreadyPaidError):
-		storage.editCard(orderID, {
-			"credit_card" : {
-				"name" : "John Doe",
-				"number" : "4242 4242 4242 4242",
-				"expiration_year" : 2025,
-				"cvv" : "123",
-				"expiration_month" : 9
-			}})
+		storage.editCard(orderID, card)
 
 	order = storage.queryOrder(orderID)["order"]
 	assert(order["paid"]==True)
@@ -132,47 +125,31 @@ def test_editCard():
 def test_editOrderError():
 	products, storage = initDB("./tests/json/products_light.json")
 	orderID = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
-
-	storage.editCustomer(orderID , { "order" : {
-		"email" : "jgnault@uqac.ca",
-		"shipping_information" : {
+	customerInformation = [{
+		"order" : {
+			"email" : "jgnault@uqac.ca",
+			"shipping_information" : {
 			"country" : "Canada",
 			"address" : "201, rue Président-Kennedy",
 			"postal_code" : "G7X 3Y7",
 			"city" : "Chicoutimi",
-			"province" : "QC"}}})
+			"province" : "QC"
+		}}}]
+
+	for i in range(1, 4):
+		customerInformation.append(copy.deepcopy(customerInformation[0]))
+
+	customerInformation[1]["order"].pop("email")
+	customerInformation[2]["order"]["shipping_information"].pop("address")
+	customerInformation[3]["order"].pop("shipping_information")
 
 	with pytest.raises(NoFoundError):
-		storage.editCustomer(42, {"order" : {
-			"email" : "jgnault@uqac.ca",
-			"shipping_information" : {
-				"country" : "Canada",
-				"address" : "201, rue Président-Kennedy",
-				"postal_code" : "G7X 3Y7",
-				"city" : "Chicoutimi",
-				"province" : "QC"}}})
+		storage.editCustomer(42, customerInformation[0])
+	with pytest.raises(MissingFieldsError):
+		storage.editCustomer(orderID, customerInformation[1])
+	with pytest.raises(MissingFieldsError):
+		storage.editCustomer(orderID, customerInformation[2])
+	with pytest.raises(MissingFieldsError):
+		storage.editCustomer(orderID, customerInformation[3])
 
-	with pytest.raises(MissingFieldsError):
-		storage.editCustomer(orderID, { "order" : {
-			"shipping_information" : {
-				"country" : "Canada",
-				"address" : "201, rue Président-Kennedy",
-				"postal_code" : "G7X 3Y7",
-				"city" : "Chicoutimi",
-				"province" : "QC"}}})
-
-	with pytest.raises(MissingFieldsError):
-		storage.editCustomer(orderID, {
-			"order" : {
-				"email" : "jgnault@uqac.ca",
-				"shipping_information" : {
-					"country" : "Canada",
-					"postal_code" : "G7X 3Y7",
-					"city" : "Chicoutimi",
-					"province" : "QC"}}}
-		)
-	with pytest.raises(MissingFieldsError):
-		storage.editCustomer(orderID, {
-			"order" : {
-				"email" : "jgnault@uqac.ca",}}
-		)
+	storage.editCustomer(orderID , customerInformation[0])
