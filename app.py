@@ -35,16 +35,16 @@ def newOrder():
 		abort(Response(str(ex), 422))
 
 
-@app.get('/orders/<int:id>')
+@app.get('/order/<int:id>')
 def getOrder(id):
 	# Retourne une commande
 	try :
-		return db.queryOrder(id)
+		return db.queryOrder(int(id))
 	except NoFoundError:
 		abort(404)
 
 
-@app.put('/orders/<int:id>')
+@app.put('/order/<int:id>')
 def editOrder(id):
 	# Edite une commande (carte de crédit, coordonnées client, etc...)
 	data : dict = json.loads(request.data)
@@ -55,9 +55,9 @@ def editOrder(id):
 			db.editCard(id, data)
 		else:
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
-	except MissingFieldsError | AlreadyPaidError | CardDeclinedError as ex:
-		abort(Response(str(ex), 422))
+	except (MissingFieldsError, AlreadyPaidError, CardDeclinedError) as ex:
+		abort(Response(str(ex) , 422))
 	except NoFoundError:
 		abort(404)
 	else :
-		return redirect("/order/"+id)
+		return redirect("/order/"+str(id))
