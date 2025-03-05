@@ -1,4 +1,5 @@
 from itertools import product
+from _pytest.mark.structures import store_mark
 import pytest, json
 from src.Database import *
 
@@ -82,16 +83,55 @@ def test_queryOrder():
 			"province" : "QC"}}})
 	assert(storage.queryOrder(orderId) == expectedResponseCustomer)
 
+def test_editCard():
+	products, storage = initDB("./tests/json/products_light.json")
+	orderID = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
+	storage.editCustomer(orderID, { "order" : {
+		"email" : "jgnault@uqac.ca",
+		"shipping_information" : {
+			"country" : "Canada",
+			"address" : "201, rue Président-Kennedy",
+			"postal_code" : "G7X 3Y7",
+			"city" : "Chicoutimi",
+			"province" : "QC"}}})
+	with pytest.raises(CardDeclinedError):
+		storage.editCard(orderID, {
+			"credit_card" : {
+				"name" : "John Doe",
+				"number" : "4242 4242 4242 4242",
+				"expiration_year" : 2022,
+				"cvv" : "123",
+				"expiration_month" : 9
+			}})
+	storage.editCard(orderID, {
+		"credit_card" : {
+			"name" : "John Doe",
+			"number" : "4242 4242 4242 4242",
+			"expiration_year" : 2025,
+			"cvv" : "123",
+			"expiration_month" : 9
+		}})
+	with pytest.raises(AlreadyPaidError):
+		storage.editCard(orderID, {
+			"credit_card" : {
+				"name" : "John Doe",
+				"number" : "4242 4242 4242 4242",
+				"expiration_year" : 2025,
+				"cvv" : "123",
+				"expiration_month" : 9
+			}})
+	order = storage.queryOrder(orderID)["order"]
+	assert(order["paid"]==True)
+	assert(order["transaction"]!=None)
+	assert(order["credit_card"]["last_digits"]=="4242")
+
+
 
 def test_editOrderError():
 	products, storage = initDB("./tests/json/products_light.json")
-	orders = [
-		storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }}),
-		storage.registeryOrder({ "product": { "id": 1, "quantity": 1 }}),
-		storage.registeryOrder({ "product": { "id": 1, "quantity": 4 }})
-	]
+	orderID = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
 
-	storage.editCustomer(orders[0], { "order" : {
+	storage.editCustomer(orderID , { "order" : {
 		"email" : "jgnault@uqac.ca",
 		"shipping_information" : {
 			"country" : "Canada",
@@ -111,7 +151,7 @@ def test_editOrderError():
 				"province" : "QC"}}})
 
 	with pytest.raises(MissingFieldsError):
-		storage.editCustomer(orders[1], { "order" : {
+		storage.editCustomer(orderID, { "order" : {
 			"shipping_information" : {
 				"country" : "Canada",
 				"address" : "201, rue Président-Kennedy",
@@ -120,7 +160,7 @@ def test_editOrderError():
 				"province" : "QC"}}})
 
 	with pytest.raises(MissingFieldsError):
-		storage.editCustomer(orders[2], {
+		storage.editCustomer(orderID, {
 			"order" : {
 				"email" : "jgnault@uqac.ca",
 				"shipping_information" : {
@@ -130,7 +170,7 @@ def test_editOrderError():
 					"province" : "QC"}}}
 		)
 	with pytest.raises(MissingFieldsError):
-		storage.editCustomer(orders[2], {
+		storage.editCustomer(orderID, {
 			"order" : {
 				"email" : "jgnault@uqac.ca",}}
 		)

@@ -1,17 +1,17 @@
 import json
+from urllib.error import HTTPError
 from peewee import *
 from playhouse.shortcuts import model_to_dict
 from src.Errors import AlreadyPaidError, CardDeclinedError, MissingFieldsError, NoFoundError, OutOfInventoryError
 import urllib.request
 
-# Connexion database
+
 db = SqliteDatabase(None)
 
 class BaseModel(Model):
     class Meta:
         database = db
 
-# Modele produits
 class Product(BaseModel):
 	id = AutoField()
 	name = CharField()
@@ -31,8 +31,9 @@ class Customer(BaseModel):
 	province = CharField()
 
 class Payment(BaseModel):
-	transactionID = CharField(primary_key = True)
-	amount_charged = IntegerField()
+	id = AutoField()
+	transaction = CharField()
+	amount_charged = FloatField()
 	card_name = CharField()
 	firstDigits = CharField()
 	lastDigits = CharField()
@@ -62,6 +63,8 @@ class DB:
 				in_stock=p["in_stock"],
 				image=p["image"]
 			)
+	def getDB(self):
+		return db
 
 	# Retourner liste produits
 	def queryProducts(self) -> dict:
@@ -133,7 +136,7 @@ class DB:
 				}
 			)
 
-		payment : Payment = Payment.get_or_none(order.payment == Payment.transactionID)
+		payment : Payment = Payment.get_or_none(order.payment == Payment.transaction)
 		if payment:
 			data["order"].update(
 				{
@@ -145,7 +148,7 @@ class DB:
 						"expiration_month" : payment.expirationMonth
 					},
 					"transaction": {
-						"id": payment.transactionID,
+						"id": payment.transaction,
 						"success": True,
 						"amount_charged": payment.amount_charged
 					},
@@ -153,7 +156,7 @@ class DB:
 				}
 			)
 
-		return data # A faire !!!
+		return data
 
 	def editCustomer(self, id : int, data : dict) -> None:
 		order = data["order"]
@@ -180,10 +183,6 @@ class DB:
 		except DoesNotExist:
 			raise NoFoundError()
 
-
-
-
-
 	def calculPrice(self, id : int) -> dict :
 		order = Order.get(Order.id == id)
 		product = Product.get(order.product == Product.id)
@@ -209,16 +208,26 @@ class DB:
 			price.update({"total_price_tax" : total_price_tax, "amount_charged":total_price+shipping_price})
 		return price
 
-
-
+	def httpPOST(self, url : str, data : dict) -> dict:
+		req = urllib.request.Request(url)
+		req.add_header('Content-Type', 'application/json; charset=utf-8')
+		try:
+			response = urllib.request.urlopen(req, json.dumps(data).encode('utf-8'))
+		except HTTPError as ex:
+			if ex.code==422:
+				return json.loads(ex.read())
+			else:
+				raise ex
+		else:
+			return json.loads(response.read())
 
 
 
 	def pay(self, id : int, data : dict) -> dict:
 		request : dict = {"amount_charged" : self.calculPrice(id)["amount_charged"]}
 		request.update(data)
-		response = urllib.request.urlopen("http://dimensweb.uqac.ca/~jgnault/shops/pay/", request).read()
-		return json.loads(response)
+		response = self.httpPOST("https://dimensweb.uqac.ca/~jgnault/shops/pay/", request)
+		return response
 
 	def editCard(self, id : int, data : dict) -> None:
 		creditCard = data["credit_card"]
@@ -238,7 +247,7 @@ class DB:
 			card = response["credit_card"]
 			transaction = response["transaction"]
 			payment = Payment(
-				transactionID = transaction["id"],
+				transaction = transaction["id"],
 				amount_charged = transaction["amount_charged"],
 				card_name = card["name"],
 				firstDigits = card["first_digits"],
@@ -246,19 +255,7 @@ class DB:
 				expirationYear = card["expiration_year"],
 				expirationMonth = card["expiration_month"]
 			)
+
 			payment.save()
-			orderInfo.payment = payment.transactionID
+			orderInfo.payment = payment.transaction
 			orderInfo.save()
-
-
-
-
-
-
-
-
-		'''
-		order.email = data["order"]["email"]
-		order.shipping_information = json.dumps(data["order"]["shipping_information"])
-		order.save()
-		'''
