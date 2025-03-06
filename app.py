@@ -1,10 +1,11 @@
 from flask import Flask, abort, redirect, request, Response
 import json
 import urllib.request
-from src.Database import DB
-from src.Errors import *
+from src.errors import *
+from src.store import Store
 
 app = Flask(__name__)
+
 
 '''
 # ~~~ Exemple de manipulation de JSON ~~~
@@ -15,7 +16,7 @@ print(jsonObj["element"]["subElement1"])
 
 try:
 	products = json.loads(urllib.request.urlopen("http://dimensweb.uqac.ca/~jgnault/shops/products/").read())
-	db = DB("stock.sql", products)
+	db = Store("stock.sql", products)
 except :
 	exit()
 
