@@ -3,28 +3,14 @@ from urllib.error import HTTPError
 
 from peewee import *
 from playhouse.shortcuts import model_to_dict
+from playhouse.db_url import connect
 from src.errors import AlreadyPaidError, CardDeclinedError, MissingFieldsError, NoFoundError, OutOfInventoryError
 import urllib.request
 from src.models import db, Product, Customer, Payment, Order
 
-class Store:
-	def __init__(self, path : str, products : dict):
-		db.init(path)
-		db.connect()
-		db.create_tables([Product, Customer, Payment, Order], safe=True)
-		for p in products.get("products", []):
-			Product.get_or_create(
-				id=p["id"],
-				name=p["name"],
-				description=p["description"],
-				price=p["price"],
-				weight=p["weight"],
-				in_stock=p["in_stock"],
-				image=p["image"]
-			)
-	def getDB(self):
-		return db
 
+
+class Store:
 	# Retourner liste produits
 	def queryProducts(self) -> dict:
 		return {"products": [model_to_dict(product) for product in Product.select()]}
@@ -218,3 +204,9 @@ class Store:
 			payment.save()
 			orderInfo.payment = payment.transaction
 			orderInfo.save()
+
+class localStore(Store):
+	def __init__(self) -> None:
+		super().__init__()
+		db.init("database.sqlite")
+		db.connect()

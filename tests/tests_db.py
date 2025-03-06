@@ -4,10 +4,12 @@ import pytest, json
 from src.store import Store
 from src.errors import *
 import copy
+import app
 
 def initDB(path : str) -> tuple[dict, Store]:
 	products : dict = json.load(open(path))
-	storage = Store(":memory:", products)
+	app.init_db(":memory:", products)
+	storage = Store()
 	return (products, storage)
 
 def test_queryProducts():
