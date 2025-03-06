@@ -150,7 +150,7 @@ class Store:
 					total_price_tax = round(1.14 * total_price, 2)
 				case _:
 					total_price_tax = round(1.15 * total_price, 2)
-			price.update({"total_price_tax" : total_price_tax, "amount_charged":total_price+shipping_price})
+			price.update({"total_price_tax" : total_price_tax, "amount_charged":total_price_tax+shipping_price})
 		return price
 
 	def httpPOST(self, url : str, data : dict) -> dict:
@@ -208,5 +208,5 @@ class Store:
 class localStore(Store):
 	def __init__(self) -> None:
 		super().__init__()
-		db.init("database.sqlite")
+		db.init("database.sql")
 		db.connect()

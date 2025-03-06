@@ -1,14 +1,14 @@
 from itertools import product
 from _pytest.mark.structures import store_mark
 import pytest, json
+import database
 from src.store import Store
 from src.errors import *
 import copy
-import app
 
 def initDB(path : str) -> tuple[dict, Store]:
 	products : dict = json.load(open(path))
-	app.init_db(":memory:", products)
+	database.init_db(":memory:", products)
 	storage = Store()
 	return (products, storage)
 
