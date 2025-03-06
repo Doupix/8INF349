@@ -1,0 +1,55 @@
+from flask import Flask, abort, redirect, request, Response
+import json
+import urllib.request
+
+from peewee import SqliteDatabase
+from src.errors import *
+from src.store import Store, localStore
+import click
+import database
+from src.models import db, Product, Customer, Payment, Order
+
+app = Flask(__name__)
+app.cli.add_command(database.init_db_command)
+
+storage = localStore()
+
+@app.get('/')
+def listProducts():
+	return storage.queryProducts()
+
+@app.post('/order')
+def newOrder():
+	# Crée une commande
+	order = json.loads(request.data)
+	try :
+		id = storage.registeryOrder(order)
+		return redirect("/order/"+str(id))
+	except MissingFieldsError | OutOfInventoryError as ex:
+		abort(Response(str(ex), 422))
+
+@app.get('/order/<int:id>')
+def getOrder(id):
+	# Retourne une commande
+	try :
+		return storage.queryOrder(int(id))
+	except NoFoundError:
+		abort(404)
+
+@app.put('/order/<int:id>')
+def editOrder(id):
+	# Edite une commande (carte de crédit, coordonnées client, etc...)
+	data : dict = json.loads(request.data)
+	try :
+		if data.get("order"):
+			storage.editCustomer(id, data)
+		elif data.get("credit_card"):
+			storage.editCard(id, data)
+		else:
+			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
+	except (MissingFieldsError, AlreadyPaidError, CardDeclinedError) as ex:
+		abort(Response(str(ex) , 422))
+	except NoFoundError:
+		abort(404)
+	else :
+		return redirect("/order/"+str(id))
