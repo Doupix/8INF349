@@ -17,6 +17,15 @@
 			"weight": 400,
 			"price": 25.62,
 			"in_stock": false
+		},
+		{
+			"id": 3,
+			"name": "Asparagus",
+			"description": "Asparagus with ham on the wooden table",
+			"image": "2.jpg",
+			"weight": 299,
+			"price": 18.95,
+			"in_stock": true
 		}
 	]
 }

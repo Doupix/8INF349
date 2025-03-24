@@ -3,7 +3,6 @@ from urllib.error import HTTPError
 
 from peewee import *
 from playhouse.shortcuts import model_to_dict
-from src.errors import AlreadyPaidError, CardDeclinedError, MissingFieldsError, NoFoundError, OutOfInventoryError
 import urllib.request
 
 
@@ -41,11 +40,20 @@ class Payment(BaseModel):
 	expirationYear = IntegerField()
 	expirationMonth = IntegerField()
 
-class Order(BaseModel):
+class PurchasedProduct(BaseModel):
 	id = AutoField()
-	product = IntegerField(null = True)
-	customer = IntegerField(null = True)
-	payment = CharField(null = True)
+	order = IntegerField()
+	product = IntegerField()
 	quantity = IntegerField()
 
+class Order(BaseModel):
+	id = AutoField()
+	customer = IntegerField(null = True)
+	payment = CharField(null = True)
+
+
 # Classe gestion BDD
+# Product.id
+# Product.price
+# Product.weight
+# PurchasedProduct.quantity

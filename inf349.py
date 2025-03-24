@@ -23,7 +23,13 @@ def newOrder():
 	# Crée une commande
 	order = json.loads(request.data)
 	try :
-		id = storage.registeryOrder(order)
+		if order.get("products"):
+			id = storage.registeryOrder(list(order["products"]))
+		elif order.get("product"):
+			id = storage.registeryLegacyOrder(order["product"])
+		else:
+			raise MissingFieldsError("La création d'une commande nécessite un produit")
+
 		return redirect("/order/"+str(id))
 	except MissingFieldsError | OutOfInventoryError as ex:
 		abort(Response(str(ex), 422))

@@ -16,20 +16,34 @@ def test_queryProducts():
 	products, storage = initDB("./tests/json/products_light.json")
 	assert(products == storage.queryProducts())
 
+def test_registeryLegacyOrder():
+	products, storage = initDB("./tests/json/products_light.json")
+	with pytest.raises(MissingFieldsError):
+		storage.registeryLegacyOrder({ "product": { "id": 1}})
+	with pytest.raises(MissingFieldsError):
+		storage.registeryLegacyOrder({ "product": {"quantity": 1 }})
+	with pytest.raises(MissingFieldsError):
+		storage.registeryLegacyOrder({ "product": {"quantity": 2 }})
+	with pytest.raises(OutOfInventoryError):
+		storage.registeryLegacyOrder({ "product": { "id": 2, "quantity": 2 }})
+
 def test_registeryOrder():
 	products, storage = initDB("./tests/json/products_light.json")
 	with pytest.raises(MissingFieldsError):
-		storage.registeryOrder({ "product": { "id": 1}})
+		storage.registeryOrder([{ "id": 1, "quantity": 0 }, { "id": 3, "quantity": 2 }])
 	with pytest.raises(MissingFieldsError):
-		storage.registeryOrder({ "product": {"quantity": 1 }})
+		storage.registeryOrder([{ "id": 1, "quantity": 2 }, { "id": 3 }])
 	with pytest.raises(MissingFieldsError):
-		storage.registeryOrder({ "product": {"quantity": 2 }})
+		storage.registeryOrder([{"quantity": 2 }, { "id": 2, "quantity": 3 }])
 	with pytest.raises(OutOfInventoryError):
-		storage.registeryOrder({ "product": { "id": 2, "quantity": 2 }})
+		storage.registeryOrder([{ "id": 1, "quantity": 2 }, { "id": 2, "quantity": 2 }])
+
 
 def test_queryOrder():
 	products, storage = initDB("./tests/json/products_light.json")
-	orderId = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
+
+	orderId = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
+
 	expectedResponse = {
 			"order" : {
 				"id" : 1,
@@ -40,10 +54,9 @@ def test_queryOrder():
 				"shipping_information" : {},
 				"paid": False,
 				"transaction": {},
-				"product" : {
-					"id" : 1,
-					"quantity" : 2
-				},
+				"products" : [
+					{"id" : 1, "quantity" : 2}
+				],
 				"shipping_price" : 10
 			}
 		}
@@ -60,10 +73,9 @@ def test_queryOrder():
 				},
 				"paid": False,
 				"transaction": {},
-				"product" : {
-					"id" : 1,
-					"quantity" : 2
-				},
+				"products" : [
+					{"id" : 1, "quantity" : 2}
+				],
 				"shipping_price" : 10,
 				"total_price_tax" : 41.81,
 				"id" : 1,
@@ -106,7 +118,7 @@ def test_editCard():
 			"expiration_month" : 9}
 		}
 
-	orderID = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
+	orderID = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
 	storage.editCustomer(orderID, customer)
 
 	with pytest.raises(CardDeclinedError):
@@ -127,7 +139,7 @@ def test_editCard():
 
 def test_editOrderError():
 	products, storage = initDB("./tests/json/products_light.json")
-	orderID = storage.registeryOrder({ "product": { "id": 1, "quantity": 2 }})
+	orderID = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
 	customerInformation = [{
 		"order" : {
 			"email" : "jgnault@uqac.ca",

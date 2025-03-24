@@ -1,3 +1,4 @@
+from itertools import product
 import json
 from urllib.error import HTTPError
 
@@ -6,47 +7,52 @@ from playhouse.shortcuts import model_to_dict
 from playhouse.db_url import connect
 from src.errors import AlreadyPaidError, CardDeclinedError, MissingFieldsError, NoFoundError, OutOfInventoryError
 import urllib.request
-from src.models import db, Product, Customer, Payment, Order
-
+from src.models import PurchasedProduct, db, Product, Customer, Payment, Order
+from src.dbUtils import Utils
 
 
 class Store:
-	# Retourner liste produits
+
 	def queryProducts(self) -> dict:
 		return {"products": [model_to_dict(product) for product in Product.select()]}
 
-	# Creer une commande
-	def registeryOrder(self, order) -> int:
-		try:
-			product_id = order["product"]["id"]
-			quantity = order["product"]["quantity"]
+	def registeryLegacyOrder(self, product : dict) -> int:
+			newOrder = Order.create()
+			try:
+				Utils().checkProducts(product["product"], newOrder.id).save()
+			except Exception as e:
+				raise e
+			return newOrder.id
 
-			if quantity < 1:
-				raise MissingFieldsError("La création d'une commande nécessite un produit")
+	def registeryOrder(self, products : list) -> int:
+			newOrder = Order.create()
+			try:
+				purchasedProducts = list()
+				for i in products:
+					purchasedProducts.append(Utils().checkProducts(i, newOrder.id))
+			except Exception as e:
+				raise e
+			else :
+				for i in purchasedProducts:
+					i.save()
 
-			product = Product.get_or_none(Product.id == product_id)
+			return newOrder.id
 
-			if not product.in_stock or not product:
-				raise OutOfInventoryError()
+#		except KeyError:
+#			raise MissingFieldsError("La création d'une commande nécessite un produit")
 
-			new_order = Order.create(
-				product=product,
-				quantity=quantity
-			)
-			return new_order.id
 
-		except KeyError:
-			raise MissingFieldsError("La création d'une commande nécessite un produit")
-
-	# Recupérer une commande
-	# TODO
 	def queryOrder(self, id : int) -> dict:
 		try :
 			order : Order = Order.get(Order.id == id)
 		except DoesNotExist:
 			raise NoFoundError()
-		product = Product.get(order.product == Product.id)
-		price = self.calculPrice(id)
+
+
+		products = []
+		for i in Utils().getPurchasedProductByOrder(id):
+			products.append({"id": i.id, "quantity": i.order.quantity})
+		price = Utils().calculPrice(id)
 		data = {
 			"order" : {
 				"id" : order.id,
@@ -55,12 +61,9 @@ class Store:
 				"email" : None,
 				"credit_card":{},
 				"shipping_information" : {},
+				"products" : products,
 				"paid": False,
 				"transaction": {},
-				"product" : {
-					"id" : order.product,
-					"quantity" : order.quantity
-				},
 				"shipping_price" : price["shipping_price"],
 			}
 		}
@@ -128,52 +131,6 @@ class Store:
 		except DoesNotExist:
 			raise NoFoundError()
 
-	def calculPrice(self, id : int) -> dict :
-		order = Order.get(Order.id == id)
-		product = Product.get(order.product == Product.id)
-		total_price = product.price * order.quantity
-		shipping_price = 5 if product.weight * order.quantity <= 500 else \
-						 10 if product.weight * order.quantity < 2000 else 25
-		price = {"total_price" : total_price , "shipping_price": shipping_price}
-		customer = Customer.get_or_none(order.customer == Customer.id)
-		if customer:
-			match customer.province :
-				case "QC":
-					total_price_tax = round(1.15 * total_price, 2)
-				case "ON":
-					total_price_tax = round(1.13 * total_price, 2)
-				case "AB":
-					total_price_tax = round(1.05 * total_price, 2)
-				case "BC":
-					total_price_tax = round(1.12 * total_price, 2)
-				case "NS":
-					total_price_tax = round(1.14 * total_price, 2)
-				case _:
-					total_price_tax = round(1.15 * total_price, 2)
-			price.update({"total_price_tax" : total_price_tax, "amount_charged":total_price_tax+shipping_price})
-		return price
-
-	def httpPOST(self, url : str, data : dict) -> dict:
-		req = urllib.request.Request(url)
-		req.add_header('Content-Type', 'application/json; charset=utf-8')
-		try:
-			response = urllib.request.urlopen(req, json.dumps(data).encode('utf-8'))
-		except HTTPError as ex:
-			if ex.code==422:
-				return json.loads(ex.read())
-			else:
-				raise ex
-		else:
-			return json.loads(response.read())
-
-
-
-	def pay(self, id : int, data : dict) -> dict:
-		request : dict = {"amount_charged" : self.calculPrice(id)["amount_charged"]}
-		request.update(data)
-		response = self.httpPOST("https://dimensweb.uqac.ca/~jgnault/shops/pay/", request)
-		return response
-
 	def editCard(self, id : int, data : dict) -> None:
 		creditCard = data["credit_card"]
 		if not all(field in creditCard for field in ["name", "number", "expiration_year", "cvv", "expiration_month"]):
@@ -185,7 +142,7 @@ class Store:
 		if orderInfo.customer == None:
 			raise MissingFieldsError("Les informations du client sont nécessaire avant d'appliquer une carte de crédit")
 
-		response = self.pay(id, data)
+		response = Utils().pay(id, data)
 		if response.get("errors"):
 			raise CardDeclinedError()
 		else :

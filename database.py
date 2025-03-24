@@ -1,6 +1,6 @@
 import click, json
 import urllib.request
-from src.models import db, Product, Customer, Payment, Order
+from src.models import PurchasedProduct, db, Product, Customer, Payment, Order
 
 
 @click.command('init-db')
@@ -12,7 +12,7 @@ def init_db(path : str, products : dict):
 
 	db.init(path)
 	db.connect()
-	db.create_tables([Product, Customer, Payment, Order], safe=True)
+	db.create_tables([Product, Customer, Payment, Order, PurchasedProduct], safe=True)
 	for p in products.get("products", []):
 		Product.get_or_create(
 			id=p["id"],
