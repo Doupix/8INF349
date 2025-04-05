@@ -1,0 +1,25 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "shippingInformation.json",
+	"title": "shipping information",
+	"type": "object",
+	"properties": {
+		"country": {
+			"type": "string"
+		},
+		"address": {
+			"type": "string"
+		},
+		"postal_code": {
+			"type": "string"
+		},
+		"city": {
+			"type": "string"
+		},
+		"province": {
+			"enum": ["QC", "ON", "AB", "BC", "NC"]
+		}
+	},
+	"required": ["country", "address", "postal_code", "city", "province"],
+	"additionalProperties": false
+}

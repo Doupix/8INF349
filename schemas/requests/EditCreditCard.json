@@ -1,0 +1,12 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Customer edit",
+	"type": "object",
+	"properties": {
+		"credit_card": {
+			"$ref": "../templates/creditCard.json"
+		}
+	},
+	"required": ["credit_card"],
+	"additionalProperties": false
+}

@@ -1,20 +1,27 @@
 from itertools import product
-from _pytest.mark.structures import store_mark
 import pytest, json
 import database
 from src.store import Store
 from src.errors import *
 import copy
+from src.dbUtils import Utils
+import os
 
 def initDB(path : str) -> tuple[dict, Store]:
 	products : dict = json.load(open(path))
-	database.init_db(":memory:", products)
-	storage = Store()
+	storage = Store(
+		"TEST",
+		os.environ.get("DB_HOST"),
+		os.environ.get("DB_PORT"),
+		os.environ.get("DB_USER"),
+		os.environ.get("DB_PASSWORD"))
+	Utils().init_db(products)
 	return (products, storage)
 
 def test_queryProducts():
 	products, storage = initDB("./tests/json/products_light.json")
 	assert(products == storage.queryProducts())
+
 
 def test_registeryLegacyOrder():
 	products, storage = initDB("./tests/json/products_light.json")

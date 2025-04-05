@@ -1,0 +1,11 @@
+{
+	"order": {
+		"shipping_information": {
+			"country": "Canada",
+			"address": "201, rue Président-Kennedy",
+			"postal_code": "G7X 3Y7",
+			"city": "Chicoutimi",
+			"province": "QC"
+		}
+	}
+}

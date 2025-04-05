@@ -13,6 +13,10 @@ from src.dbUtils import Utils
 
 class Store:
 
+	def __init__(self, name, host, port, user, password) -> None:
+		db.init(name, host=host, port=port, user=user, password=password)
+		db.connect()
+
 	def queryProducts(self) -> dict:
 		return {"products": [model_to_dict(product) for product in Product.select()]}
 
@@ -161,9 +165,3 @@ class Store:
 			payment.save()
 			orderInfo.payment = payment.transaction
 			orderInfo.save()
-
-class localStore(Store):
-	def __init__(self) -> None:
-		super().__init__()
-		db.init("database.sql")
-		db.connect()

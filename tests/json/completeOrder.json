@@ -1,0 +1,39 @@
+{
+	"order": {
+		"shipping_information": {
+			"country": "Canada",
+			"address": "201, rue Président-Kennedy",
+			"postal_code": "G7X 3Y7",
+			"city": "Chicoutimi",
+			"province": "QC"
+		},
+		"email": "jgnault@uqac.ca",
+		"total_price": 9148,
+		"total_price_tax": 10520.2,
+		"paid": true,
+		"products": [
+			{
+				"id": 123,
+				"quantity": 1
+			},
+			{
+				"id": 13,
+				"quantity": 1
+			}
+		],
+		"credit_card": {
+			"name": "John Doe",
+			"first_digits": "4242",
+			"last_digits": "4242",
+			"expiration_year": 2024,
+			"expiration_month": 9
+		},
+		"transaction": {
+			"id": "wgEQ4zAUdYqpr21rt8A10dDrKbfcLmqi",
+			"success": true,
+			"amount_charged": 10148
+		},
+		"shipping_price": 1000,
+		"id": 6543
+	}
+}

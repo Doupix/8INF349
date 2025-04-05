@@ -16,6 +16,19 @@ class Utils:
 	def __init__(self) -> None:
 		pass
 
+	def init_db(self, products : dict):
+		db.create_tables([Product, Customer, Payment, Order, PurchasedProduct], safe=True)
+		for p in products.get("products", []):
+			Product.get_or_create(
+				id=p["id"],
+				name=p["name"],
+				description=p["description"],
+				price=p["price"],
+				weight=p["weight"],
+				in_stock=p["in_stock"],
+				image=p["image"]
+			)
+
 	def checkProducts(self, order : dict, id : int) -> PurchasedProduct:
 		if not all(field in order for field in ["id", "quantity"]):
 				raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")

@@ -6,7 +6,7 @@ from playhouse.shortcuts import model_to_dict
 import urllib.request
 
 
-db = SqliteDatabase(None)
+db = PostgresqlDatabase(None)
 
 class BaseModel(Model):
     class Meta:
