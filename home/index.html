@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boutique en ligne</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/index.css">
+</head>
+<body>
+    <header>
+        <div class="header-top">
+            <h1>Bienvenue sur notre boutique !</h1>
+            <button id="cart-button">
+                🛒 <span id="cart-count">0</span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section id="products">
+            <h2>Nos produits</h2>
+            <div id="product-list"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; Projet de session 8INF349 — Technologies Web avancées</p>
+        <img src="images/uqac527x316_transparent.png" alt="Logo UQAC" class="uqac-logo">
+    </footer>
+
+    <div id="cart-panel" class="hidden">
+        <div class="cart-content">
+            <h2>Mon panier</h2>
+            <ul id="cart-items"></ul>
+            <p id="cart-total"></p>
+            <button id="checkout-btn">Valider la commande</button>
+            <button id="clear-cart">Vider le panier</button>
+            <button id="close-cart">Fermer</button>
+        </div>
+    </div>
+
+    <script src="javascript/index_test.js"></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+:root {
+    --uqac-green: #6A8211;
+    --uqac-light: #f5f5f5;
+    --uqac-dark: #222;
+    --uqac-white: #fff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--uqac-light);
+    color: var(--uqac-dark);
+    line-height: 1.6;
+}
+
+header {
+    background-color: var(--uqac-green);
+    color: var(--uqac-white);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#cart-button {
+    background-color: white;
+    color: var(--uqac-green);
+    border: none;
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#cart-button:hover {
+    background-color: var(--uqac-light);
+}
+
+main {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+footer {
+    background-color: var(--uqac-green);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 60px;
+}
+
+.uqac-logo {
+    height: 55px;
+    background-color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+#product-list {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.product-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    width: 250px;
+    text-align: center;
+}
+
+.product-card img {
+    max-width: 100%;
+    height: 130px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+.product-card button {
+    background-color: var(--uqac-green);
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    width: 100%;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.product-card button:hover {
+    background-color: #58710f;
+}
+
+/* Cart Panel */
+#cart-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100%;
+    background-color: white;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+#cart-panel.show {
+    transform: translateX(0);
+}
+
+.cart-content {
+    padding: 1.5rem;
+}
+
+#cart-items {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+#cart-items li {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.5rem;
+}
+
+.cart-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cart-details {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.cart-details img {
+    height: 40px;
+}
+
+.cart-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cart-controls button {
+    background-color: #eee;
+    border: 1px solid #ccc;
+    padding: 2px 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.remove-item {
+    font-size: 0.85rem;
+    color: #aaa;
+    text-decoration: underline;
+    cursor: pointer;
+    align-self: center;
+}
+
+.remove-item:hover {
+    color: #666;
+}
+
+#cart-total {
+    font-weight: bold;
+    margin-top: 1rem;
+}
+
+#checkout-btn, #close-cart, #clear-cart {
+    display: inline-block;
+    margin: 0.5rem 0.25rem 0 0;
+    padding: 0.5rem 1rem;
+    background-color: var(--uqac-green);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+#clear-cart {
+    background-color: #b32222;
+}
+
+#close-cart {
+    background-color: #888;
+}
+
+.cart-controls button {
+    background-color: var(--uqac-green);
+    color: white;
+    font-weight: bold;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    text-align: center;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .cart-controls button:hover {
+    background-color: #58710f;
+  }
+  
