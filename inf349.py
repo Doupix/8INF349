@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, request, Response
+from flask import Flask, abort, redirect, request, Response, send_from_directory, jsonify
 import json
 import urllib.request
 
@@ -8,6 +8,7 @@ from src.store import Store, localStore
 import click
 import database
 from src.models import db, Product, Customer, Payment, Order
+import os
 
 app = Flask(__name__)
 app.cli.add_command(database.init_db_command)
@@ -58,4 +59,12 @@ def editOrder(id):
 	except NoFoundError:
 		abort(404)
 	else :
-		return redirect("/order/"+str(id))
+		return jsonify({"message": f"Commande {id} complétée avec succès"}), 200
+
+@app.route('/home')
+def serve_home():
+    return send_from_directory('home', 'index.html')
+
+@app.route('/home/<path:filename>')
+def serve_static_file(filename):
+    return send_from_directory('home', filename)

@@ -1,0 +1,71 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "order.json",
+	"title": "order",
+	"type": "object",
+	"properties": {
+		"order": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "integer"
+				},
+				"quantity": {
+					"type": "integer"
+				},
+				"total_price": {
+					"type": "number"
+				},
+				"total_price_tax": {
+					"type": "number"
+				},
+				"email": {
+					"type": "string"
+				},
+				"credit_card": {
+					"oneOf": [
+						{ "$ref": "creditCardSummary.json" },
+						{ "type": "object", "additionalProperties": false }
+					]
+				},
+				"shipping_information": {
+					"oneOf": [
+						{ "$ref": "shippingInformation.json" },
+						{ "type": "object", "additionalProperties": false }
+					]
+				},
+				"paid": {
+					"type": "boolean"
+				},
+				"transaction": {
+					"oneOf": [
+						{ "$ref": "transaction.json" },
+						{ "type": "object", "additionalProperties": false }
+					]
+				},
+				"products": {
+					"type": "array",
+					"items": { "$ref": "product.json" }
+				},
+				"shipping_price": {
+					"type": "integer"
+				}
+			},
+			"required": [
+				"id",
+				"total_price",
+				"total_price_tax",
+				"email",
+				"credit_card",
+				"shipping_information",
+				"paid",
+				"transaction",
+				"products",
+				"shipping_price"
+			],
+			"additionalProperties": false
+		}
+	},
+	"required": ["order"],
+	"additionalProperties": false
+}

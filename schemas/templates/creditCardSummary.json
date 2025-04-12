@@ -1,0 +1,31 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "product.json",
+	"title": "product",
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string"
+		},
+		"first_digits": {
+			"type": "string"
+		},
+		"last_digits": {
+			"type": "string"
+		},
+		"expiration_year": {
+			"type": "integer"
+		},
+		"expiration_month": {
+			"type": "integer"
+		}
+	},
+	"required": [
+		"name",
+		"first_digits",
+		"last_digits",
+		"expiration_year",
+		"expiration_month"
+	],
+	"additionalProperties": false
+}

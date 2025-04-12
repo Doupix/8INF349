@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Voir une commande</title>
+    <link rel="stylesheet" href="/home/styles/style.css">
+</head>
+<body>
+    <a href="/home/index.html" class="btn btn-back">← Retour au catalogue</a>
+    
+    <h1>Voir une commande</h1>
+
+    <form id="lookup-form">
+        <label for="order-id">ID de commande :</label>
+        <input type="number" id="order-id" required min="1">
+        <button type="submit" class="btn">Afficher</button>
+    </form>
+
+    <div id="result" class="order-result"></div>
+
+    <script src="/home/javascript/view_order.js"></script>
+</body>
+</html>

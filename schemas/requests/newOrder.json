@@ -1,0 +1,14 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "new order",
+	"type": "object",
+	"properties": {
+		"product": { "$ref": "../templates/product.json" },
+		"products": {
+			"type": "array",
+			"items": { "$ref": "../templates/product.json" }
+		}
+	},
+	"additionalProperties": false,
+	"maxProperties": 1
+}

@@ -1,0 +1,18 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Customer edit",
+	"type": "object",
+	"properties": {
+		"order": {
+			"type": "object",
+			"properties": {
+				"shipping_information": {
+					"$ref": "../templates/shippingInformation.json"
+				}
+			},
+			"required": ["shipping_information"]
+		}
+	},
+	"required": ["order"],
+	"additionalProperties": false
+}

@@ -1,0 +1,19 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "transaction.json",
+	"title": "transaction",
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"success": {
+			"type": "boolean"
+		},
+		"amount_charged": {
+			"type": "integer"
+		}
+	},
+	"required": ["id", "success", "amount_charged"],
+	"additionalProperties": false
+}
