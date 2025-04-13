@@ -1,10 +1,15 @@
-FROM python:3.14-rc-alpine3.21
+FROM python:3.10-slim
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
-COPY src/ schemas/ *.py ./
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
-CMD [ "flask", "run" ]
+ENV PYTHONPATH="${PYTHONPATH}:/app"
+
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"]
+
