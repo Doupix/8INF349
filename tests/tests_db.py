@@ -7,24 +7,26 @@ import copy
 from src.dbUtils import Utils
 import os
 
-def initDB(path : str) -> tuple[dict, Store]:
-	products : dict = json.load(open(path))
+def initDB() -> tuple[dict, Store]:
+	products : dict = json.load(open("./tests/json/products.json"))
+	for i in products["products"]:
+		i.pop("height")
+		i.pop("type")
 	storage = Store(
-		"TEST",
+		os.environ.get("DB_NAME"),
 		os.environ.get("DB_HOST"),
 		os.environ.get("DB_PORT"),
 		os.environ.get("DB_USER"),
 		os.environ.get("DB_PASSWORD"))
-	Utils().init_db(products)
 	return (products, storage)
 
 def test_queryProducts():
-	products, storage = initDB("./tests/json/products_light.json")
+	products, storage = initDB()
 	assert(products == storage.queryProducts())
 
 
 def test_registeryLegacyOrder():
-	products, storage = initDB("./tests/json/products_light.json")
+	products, storage = initDB()
 	with pytest.raises(MissingFieldsError):
 		storage.registeryLegacyOrder({ "product": { "id": 1}})
 	with pytest.raises(MissingFieldsError):
@@ -32,10 +34,10 @@ def test_registeryLegacyOrder():
 	with pytest.raises(MissingFieldsError):
 		storage.registeryLegacyOrder({ "product": {"quantity": 2 }})
 	with pytest.raises(OutOfInventoryError):
-		storage.registeryLegacyOrder({ "product": { "id": 2, "quantity": 2 }})
+		storage.registeryLegacyOrder({ "product": { "id": 4, "quantity": 2 }})
 
 def test_registeryOrder():
-	products, storage = initDB("./tests/json/products_light.json")
+	products, storage = initDB()
 	with pytest.raises(MissingFieldsError):
 		storage.registeryOrder([{ "id": 1, "quantity": 0 }, { "id": 3, "quantity": 2 }])
 	with pytest.raises(MissingFieldsError):
@@ -43,18 +45,18 @@ def test_registeryOrder():
 	with pytest.raises(MissingFieldsError):
 		storage.registeryOrder([{"quantity": 2 }, { "id": 2, "quantity": 3 }])
 	with pytest.raises(OutOfInventoryError):
-		storage.registeryOrder([{ "id": 1, "quantity": 2 }, { "id": 2, "quantity": 2 }])
+		storage.registeryOrder([{ "id": 1, "quantity": 2 }, { "id": 4, "quantity": 2 }])
 
 
 def test_queryOrder():
-	products, storage = initDB("./tests/json/products_light.json")
+	products, storage = initDB()
 
 	orderId = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
 
 	expectedResponse = {
 			"order" : {
-				"id" : 1,
-				"total_price" : 36.36,
+				"id" : orderId,
+				"total_price" : 56.2,
 				"total_price_tax" : None,
 				"email" : None,
 				"credit_card": {},
@@ -84,14 +86,14 @@ def test_queryOrder():
 					{"id" : 1, "quantity" : 2}
 				],
 				"shipping_price" : 10,
-				"total_price_tax" : 41.81,
-				"id" : 1,
-				"total_price" : 36.36,
+				"total_price_tax" : 64.63,
+				"id" : orderId,
+				"total_price" : 56.2,
 			}
 		}
 
 	with pytest.raises(NoFoundError):
-		storage.queryOrder(orderId+1)
+		storage.queryOrder(orderId+100)
 
 	assert(storage.queryOrder(orderId) == expectedResponse)
 	storage.editCustomer(orderId, { "order" : {
@@ -105,7 +107,7 @@ def test_queryOrder():
 	assert(storage.queryOrder(orderId) == expectedResponseCustomer)
 
 def test_editCard():
-	products, storage = initDB("./tests/json/products_light.json")
+	products, storage = initDB()
 	customer =  {
 		"order" : {
 			"email" : "jgnault@uqac.ca",
@@ -145,7 +147,7 @@ def test_editCard():
 
 
 def test_editOrderError():
-	products, storage = initDB("./tests/json/products_light.json")
+	products, storage = initDB()
 	orderID = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
 	customerInformation = [{
 		"order" : {
@@ -166,7 +168,7 @@ def test_editOrderError():
 	customerInformation[3]["order"].pop("shipping_information")
 
 	with pytest.raises(NoFoundError):
-		storage.editCustomer(42, customerInformation[0])
+		storage.editCustomer(9999, customerInformation[0])
 	with pytest.raises(MissingFieldsError):
 		storage.editCustomer(orderID, customerInformation[1])
 	with pytest.raises(MissingFieldsError):
