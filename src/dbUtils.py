@@ -22,7 +22,7 @@ class Utils:
 			Product.get_or_create(
 				id=p["id"],
 				name=p["name"],
-				description=p["description"],
+				description=p["description"].replace('\u0000', ''),
 				price=p["price"],
 				weight=p["weight"],
 				in_stock=p["in_stock"],

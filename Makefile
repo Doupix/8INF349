@@ -1,16 +1,16 @@
 
 run:
-	sudo docker-compose up --build
+	docker-compose up --build -d
 
 stop:
-	sudo docker-compose down
+	docker-compose down
 
 init-db:
-	sudo docker exec -it api8inf349 flask init-db
+	docker exec -it api8inf349 flask init-db
 
 logs:
-	sudo docker logs api8inf349
+	docker logs api8inf349
 
 clean:
-	sudo docker-compose down -v
-	sudo docker system prune -f
+	docker-compose down -v
+	docker system prune -f
