@@ -1,5 +1,6 @@
 from itertools import product
 import json
+from typing_extensions import Awaitable
 from urllib.error import HTTPError
 
 from peewee import *
@@ -10,12 +11,12 @@ import urllib.request
 from src.models import PurchasedProduct, db, Product, Customer, Payment, Order
 from src.dbUtils import Utils
 
-
 class Store:
 
 	def __init__(self, name, host, port, user, password) -> None:
 		db.init(name, host=host, port=port, user=user, password=password)
 		db.connect()
+
 
 	def queryProducts(self) -> dict:
 		return {"products": [model_to_dict(product) for product in Product.select()]}
@@ -23,7 +24,7 @@ class Store:
 	def registeryLegacyOrder(self, product : dict) -> int:
 			newOrder = Order.create()
 			try:
-				Utils().checkProducts(product["product"], newOrder.id).save()
+				Utils().checkProducts(product, newOrder.id).save()
 			except Exception as e:
 				raise e
 			return newOrder.id

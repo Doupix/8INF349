@@ -5,8 +5,7 @@ import urllib.request
 from peewee import SqliteDatabase
 from src.errors import *
 from src.store import Store
-import click
-import database
+import click, database, redis
 from src.models import db, Product, Customer, Payment, Order
 import os
 
@@ -21,6 +20,7 @@ storage = Store(
 	os.environ.get("DB_USER"),
 	os.environ.get("DB_PASSWORD"))
 
+r = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
 
 @app.get('/')
 def listProducts():
@@ -39,12 +39,14 @@ def newOrder():
 			raise MissingFieldsError("La création d'une commande nécessite un produit")
 
 		return redirect("/order/"+str(id))
-	except MissingFieldsError | OutOfInventoryError as ex:
+	except (MissingFieldsError, OutOfInventoryError) as ex:
 		abort(Response(str(ex), 422))
 
 @app.get('/order/<int:id>')
 def getOrder(id):
-	# Retourne une commande
+	cached = str(r.get(str(id)))
+	if cached :
+		return cached
 	try :
 		return storage.queryOrder(int(id))
 	except NoFoundError:
@@ -59,6 +61,7 @@ def editOrder(id):
 			storage.editCustomer(id, data)
 		elif data.get("credit_card"):
 			storage.editCard(id, data)
+			r.set(str(id), str(storage.queryOrder(id)))
 		else:
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 	except (MissingFieldsError, AlreadyPaidError, CardDeclinedError) as ex:
