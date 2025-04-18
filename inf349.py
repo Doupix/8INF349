@@ -1,10 +1,10 @@
-from flask import Flask, abort, redirect, request, Response, send_from_directory, jsonify
+from flask import Flask, abort, redirect, request, Response, send_from_directory
 import json
 import urllib.request
 
 from peewee import SqliteDatabase
 from src.errors import *
-from src.store import Store, localStore
+from src.store import Store
 import click
 import database
 from src.models import db, Product, Customer, Payment, Order
@@ -13,7 +13,14 @@ import os
 app = Flask(__name__)
 app.cli.add_command(database.init_db_command)
 
-storage = localStore()
+
+storage = Store(
+	os.environ.get("DB_NAME"),
+	os.environ.get("DB_HOST"),
+	os.environ.get("DB_PORT"),
+	os.environ.get("DB_USER"),
+	os.environ.get("DB_PASSWORD"))
+
 
 @app.get('/')
 def listProducts():
@@ -59,7 +66,7 @@ def editOrder(id):
 	except NoFoundError:
 		abort(404)
 	else :
-		return jsonify({"message": f"Commande {id} complétée avec succès"}), 200
+		return {"message": "Commande complétée", "id": id}, 200
 
 @app.route('/home')
 def serve_home():
