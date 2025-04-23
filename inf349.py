@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, request, Response
+from flask import Flask, abort, redirect, request, Response, send_from_directory
 import json
 import urllib.request
 
@@ -66,4 +66,12 @@ def editOrder(id):
 	except NoFoundError:
 		abort(404)
 	else :
-		return redirect("/order/"+str(id))
+		return {"message": "Commande complétée", "id": id}, 200
+
+@app.route('/home')
+def serve_home():
+    return send_from_directory('home', 'index.html')
+
+@app.route('/home/<path:filename>')
+def serve_static_file(filename):
+    return send_from_directory('home', filename)

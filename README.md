@@ -18,10 +18,25 @@ Ce dépôt contient l'application Flask développée pour le projet de session d
 make run
 ```
 
+
+OU
+
+```bash
+docker compose up -d --build
+```
+
+
 ### Initialiser la base de données
 
 ```bash
 make init-db
+```
+
+
+OU
+
+```bash
+docker exec -it api8inf349 flask init-db
 ```
 
 ### Voir les logs du conteneur Flask
@@ -30,16 +45,36 @@ make init-db
 make logs
 ```
 
+
+OU
+
+```bash
+docker logs -f api8inf349
+```
+
 ### Arrêter l’application
 
 ```bash
 make stop
 ```
 
+
+OU
+
+```bash
+docker compose down
+```
+
 ### Nettoyer complètement (conteneurs + volumes + cache)
 
 ```bash
 make clean
+```
+
+OU
+
+```bash
+docker compose down -v --remove-orphans
 ```
 
 ## Contenu du `docker-compose.yml`
