@@ -142,7 +142,7 @@ class Store:
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 
 		orderInfo : Order = Order.get(Order.id == id)
-		if orderInfo.payment != None:
+		if orderInfo.payment != None and orderInfo.payment != "card-declined":
 			raise AlreadyPaidError
 		if orderInfo.customer == None:
 			raise MissingFieldsError("Les informations du client sont nécessaire avant d'appliquer une carte de crédit")
