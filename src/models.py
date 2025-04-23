@@ -32,13 +32,14 @@ class Customer(BaseModel):
 
 class Payment(BaseModel):
 	id = AutoField()
-	transaction = CharField()
 	amount_charged = FloatField()
-	card_name = CharField()
-	firstDigits = CharField()
-	lastDigits = CharField()
-	expirationYear = IntegerField()
-	expirationMonth = IntegerField()
+	status = CharField()
+	transaction = CharField(null = True)
+	card_name = CharField(null = True)
+	firstDigits = CharField(null = True)
+	lastDigits = CharField(null = True)
+	expirationYear = IntegerField(null = True)
+	expirationMonth = IntegerField(null = True)
 
 class PurchasedProduct(BaseModel):
 	id = AutoField()
