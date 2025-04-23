@@ -14,6 +14,7 @@ COPY home/ ./home/
 
 ENV PYTHONPATH=/usr/src/app
 
+
 EXPOSE 5000
 
 CMD ["flask", "run", "--host=0.0.0.0"]

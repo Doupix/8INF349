@@ -18,17 +18,20 @@ Ce dépôt contient l'application Flask développée pour le projet de session d
 make run
 ```
 
+
 OU
 
 ```bash
 docker compose up -d --build
 ```
 
+
 ### Initialiser la base de données
 
 ```bash
 make init-db
 ```
+
 
 OU
 
@@ -42,6 +45,7 @@ docker exec -it api8inf349 flask init-db
 make logs
 ```
 
+
 OU
 
 ```bash
@@ -53,6 +57,7 @@ docker logs -f api8inf349
 ```bash
 make stop
 ```
+
 
 OU
 
