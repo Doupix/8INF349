@@ -28,13 +28,13 @@ def test_queryProducts():
 def test_registeryLegacyOrder():
 	products, storage = initDB()
 	with pytest.raises(MissingFieldsError):
-		storage.registeryLegacyOrder({ "product": { "id": 1}})
+		storage.registeryLegacyOrder({ "id": 1})
 	with pytest.raises(MissingFieldsError):
-		storage.registeryLegacyOrder({ "product": {"quantity": 1 }})
+		storage.registeryLegacyOrder({"quantity": 1 })
 	with pytest.raises(MissingFieldsError):
-		storage.registeryLegacyOrder({ "product": {"quantity": 2 }})
+		storage.registeryLegacyOrder({"quantity": 2 })
 	with pytest.raises(OutOfInventoryError):
-		storage.registeryLegacyOrder({ "product": { "id": 4, "quantity": 2 }})
+		storage.registeryLegacyOrder({ "id": 4, "quantity": 2 })
 
 def test_registeryOrder():
 	products, storage = initDB()
@@ -51,7 +51,7 @@ def test_registeryOrder():
 def test_queryOrder():
 	products, storage = initDB()
 
-	orderId = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
+	orderId = storage.registeryLegacyOrder({"id": 1, "quantity": 2 })
 
 	expectedResponse = {
 			"order" : {
@@ -127,7 +127,7 @@ def test_editCard():
 			"expiration_month" : 9}
 		}
 
-	orderID = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
+	orderID = storage.registeryLegacyOrder({  "id": 1, "quantity": 2 })
 	storage.editCustomer(orderID, customer)
 
 	with pytest.raises(CardDeclinedError):
@@ -148,7 +148,7 @@ def test_editCard():
 
 def test_editOrderError():
 	products, storage = initDB()
-	orderID = storage.registeryLegacyOrder({ "product": { "id": 1, "quantity": 2 }})
+	orderID = storage.registeryLegacyOrder({ "id": 1, "quantity": 2 })
 	customerInformation = [{
 		"order" : {
 			"email" : "jgnault@uqac.ca",
