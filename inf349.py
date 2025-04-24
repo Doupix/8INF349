@@ -46,7 +46,7 @@ def newOrder():
 def getOrder(id):
 	cached = r.get(str(id))
 	if cached != None:
-		return str(cached)
+		return json.loads(str(cached))
 	try :
 		return storage.queryOrder(int(id))
 	except NoFoundError:
@@ -61,7 +61,7 @@ def editOrder(id):
 			storage.editCustomer(id, data)
 		elif data.get("credit_card"):
 			storage.editCard(id, data)
-			r.set(str(id), str(storage.queryOrder(id)))
+			r.set(str(id), json.dumps(storage.queryOrder(id)))
 		else:
 			raise MissingFieldsError("Il manque un ou plusieurs champs qui sont obligatoires")
 	except (MissingFieldsError, AlreadyPaidError, CardDeclinedError) as ex:
