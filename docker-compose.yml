@@ -1,23 +1,6 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  web:
-    build: .
-    container_name: api8inf349
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_APP=inf349.py
-      - REDIS_URL=redis://redis:6379
-      - DB_HOST=postgres
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_PORT=5432
-      - DB_NAME=api8inf349
-    depends_on:
-      - postgres
-      - redis
-
   postgres:
     image: postgres:12
     restart: always

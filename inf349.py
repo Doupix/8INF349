@@ -44,9 +44,9 @@ def newOrder():
 
 @app.get('/order/<int:id>')
 def getOrder(id):
-	cached = str(r.get(str(id)))
-	if cached :
-		return cached
+	cached = r.get(str(id))
+	if cached != None:
+		return str(cached)
 	try :
 		return storage.queryOrder(int(id))
 	except NoFoundError:

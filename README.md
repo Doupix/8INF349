@@ -12,89 +12,13 @@ Ce dépôt contient l'application Flask développée pour le projet de session d
 
 ## Commandes utiles
 
-### Démarrer l’application
+- Démarrer et initialiser l’application "from scratch": `make run`
+- Voir les logs du conteneur Flask: `docker logs -f api8inf349`
 
-```bash
-make run
-```
-
-
-OU
-
-```bash
-docker compose up -d --build
-```
-
-
-### Initialiser la base de données
-
-```bash
-make init-db
-```
-
-
-OU
-
-```bash
-docker exec -it api8inf349 flask init-db
-```
-
-### Voir les logs du conteneur Flask
-
-```bash
-make logs
-```
-
-
-OU
-
-```bash
-docker logs -f api8inf349
-```
-
-### Arrêter l’application
-
-```bash
-make stop
-```
-
-
-OU
-
-```bash
-docker compose down
-```
-
-### Nettoyer complètement (conteneurs + volumes + cache)
-
-```bash
-make clean
-```
-
-OU
-
-```bash
-docker compose down -v --remove-orphans
-```
-
-## Contenu du `docker-compose.yml`
-
-- web (Flask, Python 3.10, Peewee, psycopg2-binary)
+Contenu du `docker-compose.yml`:
 - postgres (PostgreSQL 12 avec volume persistant)
 - redis (Redis 5)
 
 Les services exposent :
-
-- localhost:5000 → Flask API
 - localhost:5432 → PostgreSQL
 - localhost:6379 → Redis
-
-## Variables d’environnement configurées automatiquement
-
-- `FLASK_APP=inf349.py`
-- `REDIS_URL=redis://redis:6379`
-- `DB_HOST=postgres`
-- `DB_USER=postgres`
-- `DB_PASSWORD=postgres`
-- `DB_PORT=5432`
-- `DB_NAME=api8inf349`

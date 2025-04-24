@@ -5,3 +5,4 @@ peewee==3.17.9
 rq==2.3.1
 redis==5.2.1
 typing_extensions
+psycopg2-binary
